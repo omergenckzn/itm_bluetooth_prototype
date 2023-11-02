@@ -66,6 +66,8 @@ class _BluetoothSerialDetailPageState extends State<BluetoothSerialDetailPage> {
 
 
   void _onDataReceived(Uint8List data) {
+
+    print(data);
     if(data != null && data.length > 0) {
       chunks.add(data);
       contentLenght += data.length;
