@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:itm_bluetooth_prototype/bluetooth_device_list_entry.dart';
+import 'package:itm_bluetooth_prototype/bluetooth_serial_detail_page.dart';
 
 class BluetoothClassic extends StatefulWidget {
   const BluetoothClassic({super.key});
@@ -24,12 +25,12 @@ class _BluetoothClassicState extends State<BluetoothClassic>
     _listBondedDevices();
   }
 
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if(state.index == 0) {
+    if (state.index == 0) {
       ///resume
-    } if(_bluetoothState.isEnabled) {
+    }
+    if (_bluetoothState.isEnabled) {
       _listBondedDevices();
     }
     super.didChangeAppLifecycleState(state);
@@ -46,7 +47,6 @@ class _BluetoothClassicState extends State<BluetoothClassic>
       setState(() {});
     });
   }
-
 
   _stateChangeListener() {
     FlutterBluetoothSerial.instance
@@ -118,6 +118,7 @@ class _BluetoothClassicState extends State<BluetoothClassic>
                   enabled: true,
                   onTap: () {
                     print('item');
+                    _goToDetailPage(_device);
                   },
                   onLongPress: () {});
             },
@@ -125,5 +126,10 @@ class _BluetoothClassicState extends State<BluetoothClassic>
         ],
       ),
     );
+  }
+
+  void _goToDetailPage(BluetoothDevice server) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => BluetoothSerialDetailPage(server: server)));
   }
 }
