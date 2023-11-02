@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:itm_bluetooth_prototype/bluetooth_device_list_entry.dart';
 
 class BluetoothClassic extends StatefulWidget {
   const BluetoothClassic({super.key});
@@ -8,14 +9,36 @@ class BluetoothClassic extends StatefulWidget {
   State<BluetoothClassic> createState() => _BluetoothClassicState();
 }
 
-class _BluetoothClassicState extends State<BluetoothClassic> {
+class _BluetoothClassicState extends State<BluetoothClassic>
+    with WidgetsBindingObserver {
   BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
+
+  List<BluetoothDevice> devices = [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _getBTState();
     _stateChangeListener();
+    _listBondedDevices();
+  }
+
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state.index == 0) {
+      ///resume
+    } if(_bluetoothState.isEnabled) {
+      _listBondedDevices();
+    }
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   _getBTState() {
@@ -24,13 +47,29 @@ class _BluetoothClassicState extends State<BluetoothClassic> {
     });
   }
 
+
   _stateChangeListener() {
     FlutterBluetoothSerial.instance
         .onStateChanged()
         .listen((BluetoothState state) {
       _bluetoothState = state;
+      if (_bluetoothState.isEnabled) {
+        _listBondedDevices();
+      } else {
+        devices.clear();
+      }
       print("State isEnabled: ${state.isEnabled}");
       setState(() {});
+    });
+  }
+
+  _listBondedDevices() {
+    FlutterBluetoothSerial.instance
+        .getBondedDevices()
+        .then((List<BluetoothDevice> bondedDevices) {
+      setState(() {
+        devices = bondedDevices;
+      });
     });
   }
 
@@ -47,17 +86,15 @@ class _BluetoothClassicState extends State<BluetoothClassic> {
             value: _bluetoothState.isEnabled,
             onChanged: (bool value) {
               future() async {
-                if(value) {
+                if (value) {
                   await FlutterBluetoothSerial.instance.requestEnable();
                 } else {
                   await FlutterBluetoothSerial.instance.requestDisable();
                 }
               }
 
-              future().then((_)  {
-                setState(() {
-
-                });
+              future().then((_) {
+                setState(() {});
               });
             },
           ),
@@ -70,7 +107,21 @@ class _BluetoothClassicState extends State<BluetoothClassic> {
               },
               child: Text('Settings'),
             ),
-          )
+          ),
+          Expanded(
+              child: ListView(
+                  children: devices.map(
+            (_device) {
+              return BluetoothDeviceListEntry(
+                  device: _device,
+                  rssi: 0,
+                  enabled: true,
+                  onTap: () {
+                    print('item');
+                  },
+                  onLongPress: () {});
+            },
+          ).toList())),
         ],
       ),
     );
