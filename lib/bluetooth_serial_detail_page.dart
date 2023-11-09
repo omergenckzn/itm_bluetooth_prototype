@@ -65,15 +65,26 @@ class _BluetoothSerialDetailPageState extends State<BluetoothSerialDetailPage> {
 
 
 
-  void _onDataReceived(Uint8List data) {
+  List<int> accumulatedData = [];
 
-    print(data);
-    if(data != null && data.length > 0) {
-      chunks.add(data);
-      contentLenght += data.length;
+  void _onDataReceived(Uint8List data) {
+    // Append the received data to the accumulatedData list
+    accumulatedData.addAll(data);
+
+    // Check if there's a newline character to indicate a complete message
+    int newlineIndex = accumulatedData.indexOf(10); // 10 is the ASCII code for '\n'
+
+    if (newlineIndex >= 0) {
+      // Extract the complete message
+      Uint8List completeMessage = Uint8List.fromList(accumulatedData.sublist(0, newlineIndex + 1));
+
+      // Process the complete message
+      String message = String.fromCharCodes(completeMessage).replaceAll("_", "");
+      print(message);
+
+      // Remove the processed message from accumulatedData
+      accumulatedData.removeRange(0, newlineIndex + 1);
     }
-    
-    print('Data Lenght: ${data.length}, chunks: ${chunks.length}');
   }
 
   @override
